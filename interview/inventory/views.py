@@ -1,6 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework import status
 
 from interview.inventory.models import (
     Inventory,
@@ -15,11 +17,25 @@ from interview.inventory.serializers import (
     InventoryTagSerializer,
     InventoryTypeSerializer,
 )
+from interview.core.paginator import ThreeItemPagination
+
+
+class InventoryListViewSet(ReadOnlyModelViewSet):
+    queryset = Inventory.objects.all()
+    serializer_class = InventorySerializer
+    pagination_class = ThreeItemPagination
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Override the retrieve so the view only supportsm list like the challenge requiremetns
+        """
+        return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class InventoryListCreateView(APIView):
     queryset = Inventory.objects.all()
     serializer_class = InventorySerializer
+    pagination_class = ThreeItemPagination
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         try:
@@ -37,9 +53,16 @@ class InventoryListCreateView(APIView):
         return Response(serializer.data, status=201)
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        serializer = self.serializer_class(self.get_queryset(), many=True)
-
-        return Response(serializer.data, status=200)
+        # Challenge instructions said to add pagination to InventoryListView not InventoryListCreateView
+        # adding it here incase the instructions meant InventoryListCreateView
+        queryset = self.get_queryset()
+        paginated_queryset = self.pagination_class.paginate_queryset(queryset, request, view=self)
+        if paginated_queryset is not None:
+            serializer = self.serializer_class(paginated_queryset, many=True)
+            return self.pagination_class.get_paginated_response(serializer.data)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return Response(serializer.data)
 
     def get_queryset(self):
         return self.queryset.all()
