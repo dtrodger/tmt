@@ -5,5 +5,5 @@ from interview.order.views import OrderListCreateView, OrderTagListCreateView, O
 urlpatterns = [
     path("tags/", OrderTagListCreateView.as_view(), name="order-detail"),
     path("", OrderListCreateView.as_view(), name="order-list"),
-    path("orders/", OrderViewSet.as_view({'get': 'list'}), name="order-list"),
+    path("orders/", OrderViewSet.as_view(), name="order-list"),
 ]
