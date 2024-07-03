@@ -1,18 +1,33 @@
 from django.shortcuts import render
 from rest_framework import generics
-from rest_framework.viewsets import ReadOnlyModelViewSet
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
+from rest_framework import status
+from rest_framework.response import Response
 
 from interview.order.models import Order, OrderTag
 from interview.order.serializers import OrderSerializer, OrderTagSerializer
-from interview.order.filter import OrderFilter
+from interview.inventory.models import InventoryTag
 
 
-class OrderViewSet(ReadOnlyModelViewSet):
+class OrderView(APIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = OrderFilter
+    
+    def get(self, request, *args, **kwargs):
+        tag_id = request.query_params.get('tag_id', None)
+        if tag_id is None:
+            return Response({'error': 'tag_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            tag_id = int(tag_id)
+            orders = Order.objects.filter(inventories__tags__id=tag_id).distinct()
+        except ValueError:
+            return Response({'error': 'Invalid tag_id format'}, status=status.HTTP_400_BAD_REQUEST)
+        except InventoryTag.DoesNotExist:
+            return Response({'error': 'Tag not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(orders, many=True)
+        return Response(serializer.data)
 
 # Create your views here.
 class OrderListCreateView(generics.ListCreateAPIView):
