@@ -42,5 +42,5 @@ urlpatterns = [
     path("tags/", InventoryTagListCreateView.as_view(), name="inventory-tags-list"),
     path("types/", InventoryTypeListCreateView.as_view(), name="inventory-types-list"),
     path("", InventoryListCreateView.as_view(), name="inventory-list"),
-    path("list-inventory/", InventoryListView.as_view({'get': 'list'}), name="inventory-filtered-list")
+    path("list-inventory/", InventoryListView.as_view(), name="inventory-filtered-list")
 ]

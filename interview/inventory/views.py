@@ -1,9 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.viewsets import ModelViewSet
+from django.utils.dateparse import parse_date
+from rest_framework import status
 
 from interview.inventory.models import (
     Inventory,
@@ -18,22 +17,27 @@ from interview.inventory.serializers import (
     InventoryTagSerializer,
     InventoryTypeSerializer,
 )
-from interview.inventory.filter import InventoryFilter
-
 
 # Challenge 1 Inventory Dates: Create a view that lists inventory items created after a certain day.
-# I would move logic from InventoryListCreateView and InventoryRetrieveUpdateDestroyView into this model view as well
-class InventoryListView(ModelViewSet):
+class InventoryListView(APIView):
     """
     InventoryView model view
     """
 
     http_method_names = ["get"]
-    queryset = Inventory.objects.order_by("-created_at")
-    serializer_class = InventorySerializer
-    permission_classes = [AllowAny]
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = InventoryFilter
+
+    def get(self, request, *args, **kwargs):
+        date_str = request.query_params.get('date', None)
+        if date_str:
+            date = parse_date(date_str)
+            if date is None:
+                return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            queryset = Inventory.objects.filter(created_at__gt=date)
+            serializer = InventorySerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({'error': 'Date parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class InventoryListCreateView(APIView):
