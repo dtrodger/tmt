@@ -23,7 +23,7 @@ class DeactivateOrderView(APIView):
     View to deactivate an order
     """
 
-    def post(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         order_id = kwargs.get("id")
         try:
             order = Order.objects.get(id=order_id)
