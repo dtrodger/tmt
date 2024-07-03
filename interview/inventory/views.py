@@ -1,6 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
+from rest_framework.viewsets import ReadOnlyModelViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 
 from interview.inventory.models import (
     Inventory,
@@ -15,6 +17,14 @@ from interview.inventory.serializers import (
     InventoryTagSerializer,
     InventoryTypeSerializer,
 )
+from interview.inventory.filter import InventoryTagFilter
+
+
+class InventoryTagViewSet(ReadOnlyModelViewSet):
+    queryset = InventoryTag.objects.all()
+    serializer_class = InventoryTagSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = InventoryTagFilter
 
 
 class InventoryListCreateView(APIView):
@@ -231,3 +241,4 @@ class InventoryTypeRetrieveUpdateDestroyView(APIView):
 
     def get_queryset(self, **kwargs):
         return self.queryset.get(**kwargs)
+

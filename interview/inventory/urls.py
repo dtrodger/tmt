@@ -8,9 +8,8 @@ from interview.inventory.views import (
     InventoryTagRetrieveUpdateDestroyView,
     InventoryTypeListCreateView,
     InventoryTypeRetrieveUpdateDestroyView,
+    InventoryTagViewSet
 )
-from interview.order.views import OrderListCreateView, OrderTagListCreateView
-
 
 urlpatterns = [
     path(
@@ -41,4 +40,5 @@ urlpatterns = [
     path("tags/", InventoryTagListCreateView.as_view(), name="inventory-tags-list"),
     path("types/", InventoryTypeListCreateView.as_view(), name="inventory-types-list"),
     path("", InventoryListCreateView.as_view(), name="inventory-list"),
+    path("inventory-tags/", InventoryTagViewSet.as_view({'get': 'list'}), name="inventory-tags-list")
 ]
