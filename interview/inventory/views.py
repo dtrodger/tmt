@@ -1,6 +1,9 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.viewsets import ModelViewSet
 
 from interview.inventory.models import (
     Inventory,
@@ -15,6 +18,22 @@ from interview.inventory.serializers import (
     InventoryTagSerializer,
     InventoryTypeSerializer,
 )
+from interview.inventory.filter import InventoryFilter
+
+
+# Challenge 1 Inventory Dates: Create a view that lists inventory items created after a certain day.
+# I would move logic from InventoryListCreateView and InventoryRetrieveUpdateDestroyView into this model view as well
+class InventoryListView(ModelViewSet):
+    """
+    InventoryView model view
+    """
+
+    http_method_names = ["get"]
+    queryset = Inventory.objects.order_by("-created_at")
+    serializer_class = InventorySerializer
+    permission_classes = [AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = InventoryFilter
 
 
 class InventoryListCreateView(APIView):
