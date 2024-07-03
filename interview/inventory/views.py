@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
+from rest_framework import status
 from rest_framework.viewsets import ReadOnlyModelViewSet
-from django_filters.rest_framework import DjangoFilterBackend
 
 from interview.inventory.models import (
     Inventory,
@@ -17,14 +17,28 @@ from interview.inventory.serializers import (
     InventoryTagSerializer,
     InventoryTypeSerializer,
 )
-from interview.inventory.filter import InventoryTagFilter
+from interview.order.models import Order
 
 
-class InventoryTagViewSet(ReadOnlyModelViewSet):
+class InventoryTagView(APIView):
     queryset = InventoryTag.objects.all()
     serializer_class = InventoryTagSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_class = InventoryTagFilter
+    
+    def get(self, request, *args, **kwargs):
+        order_id = request.query_params.get('order_id', None)
+        if order_id is None:
+            return Response({'error': 'order_id parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order_id = int(order_id)
+            tags = InventoryTag.objects.filter(inventories__orders__id=order_id)
+        except ValueError:
+            return Response({'error': 'Invalid order_id format'}, status=status.HTTP_400_BAD_REQUEST)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(tags, many=True)
+        return Response(serializer.data)
 
 
 class InventoryListCreateView(APIView):
